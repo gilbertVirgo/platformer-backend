@@ -1,20 +1,21 @@
-from threading import Thread
-import socket
+import asyncio
+import websockets
 
-class Server(Thread):
-	def __init__(self,port):
-		Thread.__init__(self)
-		self.isListening = True
-		self.port = port
+async def recieve(websocket):
+	data = websocket.recv()
+	print(data)
+	await websocket.send("ping pong")
 
-	def run(self):
-		self.sock = socket.socket(socket.AF_INET,
-                                  socket.SOCK_DGRAM)
-        self.sock.bind(("0.0.0.0", self.port))
-        self.sock.setblocking(0)
-        self.sock.settimeout(5)
+async def GameLoop(websocket,path):
+	print("GameLoop entered")
+	while True:
+		await recieve(websocket,path)
+		print("executed")
 
-        while self.isListening():
-        	try: 
-        		data,address = self.sock.recvfrom(1024)
-        		
+print("1")
+start_server = websockets.serve(GameLoop,"0.0.0.0",1235)
+print("1")
+asyncio.get_event_loop().run_until_complete(start_server)
+print("1")
+asyncio.get_event_loop().run_forever()
+print("1")
