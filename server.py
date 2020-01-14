@@ -1,21 +1,29 @@
 import asyncio
 import websockets
+import logging
+from threading import Thread
+
+SOCKETS = set()
 
 async def recieve(websocket):
-	data = websocket.recv()
-	print(data)
-	await websocket.send("ping pong")
+	data = await websocket.recv()
+	print("DATA RECIEVED:",data,"FROM:",websocket.remote_address)
 
-async def GameLoop(websocket,path):
-	print("GameLoop entered")
+async def socketHandle(websocket,path):
+	print("socketHandle entered:",websocket.remote_address)
+	SOCKETS.add(websocket)
 	while True:
-		await recieve(websocket,path)
-		print("executed")
+		await recieve(websocket)
 
-print("1")
-start_server = websockets.serve(GameLoop,"0.0.0.0",1235)
-print("1")
+@asyncio.coroutine
+async def GameLoop():
+	while True:
+		for websocket in SOCKETS:
+			await websocket.send("tick")
+		await asyncio.sleep(1)
+
+asyncio.ensure_future(GameLoop())
+
+start_server = websockets.serve(socketHandle,"0.0.0.0",1234)
 asyncio.get_event_loop().run_until_complete(start_server)
-print("1")
 asyncio.get_event_loop().run_forever()
-print("1")
