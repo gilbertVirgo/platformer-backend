@@ -23,43 +23,51 @@ class Player(Entity):
 
 		self.facing = "right"
 
-	def update(self,keys):
+	def update(self,keys,debug=False,**kwargs):
+		if debug: print("player:",keys)
 		self.buttons = keys
 
-	def tick(self,walls,projectiles):
+	def tick(self,walls,projectiles,debug=False,**kwargs):
 
+		if debug: self._printinfo()
+		
 		for p in projectiles:
 			if self.isCollidingWith(p):
 				self.dead = True
 				p.dead = True
 
 		if self.buttons["jump"]:
-			if not self.held["jump"]:
+			if not self.held["jump"] and self.onGround:
+				if debug: print("jump down")
 				self.velocity[1] -= 10
 				self.held["jump"] = True
+				self.onGround = False
 		else:
 			self.held["jump"] = False
 
 		if self.buttons["left"]:
 			if not self.held["left"]:
-				self.velocity[0] -= 10
+				if debug: print("left down")
+				self.velocity[0] -= 1
 				self.held["left"] = True
 				self.facing = "left"
 		else:
 			self.held["left"] = False
-			self.velocity[0] += 10
+			self.velocity[0] += 1
 
 		if self.buttons["right"]:
 			if not self.held["right"]:
-				self.velocity[0] += 10
+				if debug: print("right down")
+				self.velocity[0] += 1
 				self.held["right"] = True
 				self.facing = "right"
 		else:
 			self.held["right"] = False
-			self.velocity[0] -= 10
+			self.velocity[0] -= 1
 
 		if self.buttons["down"]:
 			if not self.held["down"]:
+				if debug: print("down down")
 				self.held["down"] = True
 		else:
 			self.held["down"] = False
@@ -78,5 +86,4 @@ class Player(Entity):
 		else:
 			self.held["interact"] = False
 
-		Entity.tick(self,walls)
-
+		Entity.tick(self,walls,debug=debug)
