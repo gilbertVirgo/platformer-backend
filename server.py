@@ -1,9 +1,10 @@
 import asyncio
 import websockets
-import logging
-from threading import Thread
+from game import Game
 
 SOCKETS = set()
+game = Game(None)
+print("Game object initiated")
 
 async def recieve(websocket):
 	data = await websocket.recv()
@@ -12,15 +13,39 @@ async def recieve(websocket):
 async def socketHandle(websocket,path):
 	print("socketHandle entered:",websocket.remote_address)
 	SOCKETS.add(websocket)
-	while True:
-		await recieve(websocket)
+
+	print("Adding player")
+	game.addPlayer(websocket.remote_address)
+	print("Player added")
+
+	present = True
+	while present:
+		try:
+			data = await recieve(websocket)
+			print(data)
+		except:
+			SOCKETS.remove(websocket)
+			present = False
+			game.removePlayer(websocket.remote_address)
+			websocket.close()
 
 @asyncio.coroutine
 async def GameLoop():
+
+	print("Loop entering")
 	while True:
+		ret = game.returnRender()
 		for websocket in SOCKETS:
-			await websocket.send("tick")
-		await asyncio.sleep(1)
+			try:
+				await websocket.send(ret)
+			except:
+				# connection is probably closed, do nothing as that's handled in socketHandle
+				pass
+
+		game.tick()
+
+		# print("tick")
+		await asyncio.sleep(1/30)
 
 asyncio.ensure_future(GameLoop())
 
