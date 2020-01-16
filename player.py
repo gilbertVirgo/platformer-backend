@@ -1,4 +1,3 @@
-import json
 from entity import Entity
 
 class Player(Entity):
@@ -8,27 +7,76 @@ class Player(Entity):
 		self.ip = ip
 
 		# LEFT RIGHT UP DOWN ATTACK PICKUP
-		self.buttons = {"up":False,
+		self.buttons = {"jump":False,
 						"left":False,
 						"down":False,
 						"right":False,
 						"attack":False,
-						"pickup":False}
+						"interact":False}
+
+		self.held = {"jump":False,
+					 "left":False,
+					 "down":False,
+					 "right":False,
+					 "attack":False,
+					 "interact":False}
+
+		self.facing = "right"
 
 	def update(self,keys):
-		self.buttons = json.loads(keys)
+		self.buttons = keys
 
-	# def tick():
-	# 	if self.buttons.up:
-	# 		self.y += 10
-	# 	if self.buttons.left:
-	# 		self.x -= 10
-	# 	if self.buttons.right:
-	# 		self.x += 10
-	# 	if self.buttons.down:
-	# 		self.y += 10
-	# 	if self.buttons.attack:
-	# 		pass
-	# 	if self.buttons.pickup:
-	# 		pass
+	def tick(self,walls,projectiles):
+
+		for p in projectiles:
+			if self.isCollidingWith(p):
+				self.dead = True
+				p.dead = True
+
+		if self.buttons["jump"]:
+			if not self.held["jump"]:
+				self.velocity[1] -= 10
+				self.held["jump"] = True
+		else:
+			self.held["jump"] = False
+
+		if self.buttons["left"]:
+			if not self.held["left"]:
+				self.velocity[0] -= 10
+				self.held["left"] = True
+				self.facing = "left"
+		else:
+			self.held["left"] = False
+			self.velocity[0] += 10
+
+		if self.buttons["right"]:
+			if not self.held["right"]:
+				self.velocity[0] += 10
+				self.held["right"] = True
+				self.facing = "right"
+		else:
+			self.held["right"] = False
+			self.velocity[0] -= 10
+
+		if self.buttons["down"]:
+			if not self.held["down"]:
+				self.held["down"] = True
+		else:
+			self.held["down"] = False
+
+		if self.buttons["attack"]:
+			if not self.held["attack"]:
+				pass
+				self.held["attack"] = True
+		else:
+			self.held["attack"] = False
+
+		if self.buttons["interact"]:
+			if not self.held["interact"]:
+				pass
+				self.held["interact"] = True
+		else:
+			self.held["interact"] = False
+
+		Entity.tick(self,walls)
 

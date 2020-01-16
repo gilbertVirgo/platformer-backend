@@ -1,6 +1,9 @@
 
 class Entity():
-	def __init__(self,x,y,size,entType,gravity=True):
+	def __init__(self,x,y,size,entType,
+				 gravity=True,
+				 velocity=[0,0],
+				 destroyOnWall=False):
 		self.x = x
 		self.y = y
 		self.right = size[0] + self.x
@@ -10,9 +13,13 @@ class Entity():
 		# Types:
 		# player
 		# wall
+		# bullet
+
 		self.type = entType
 		self.gravity = gravity
 		self.velocity = [0,0]
+		self.destroyOnWall = destroyOnWall
+		self.dead = False
 
 	def _printinfo(self):
 		print({"type":self.type,
@@ -32,7 +39,7 @@ class Entity():
 		self.velocity[0] += x
 		self.velocity[1] += y
 
-	def tick(self,walls):
+	def tick(self,walls,**kwargs):
 		self._printinfo()
 
 		if self.gravity:
@@ -40,6 +47,7 @@ class Entity():
 
 		collision = False
 
+		# collision
 		if walls != None and self.type != "wall":
 			newTL = [self.x+self.velocity[0],self.y+self.velocity[1]]
 			newBR = [self.right+self.velocity[0],self.bottom+self.velocity[1]]
@@ -54,8 +62,7 @@ class Entity():
 					(self.y > w.bottom or self.bottom < w.y)):
 
 					# top colliding
-					if (newTL[1] < w.bottom and newTL[1] > w.y):
-						print("\nCollision: 1")
+					if (newTL[1] < w.bottom and newTL[1] > w.y):print("\nCollision: 1")
 						self._printinfo()
 						self.y = w.bottom
 						self.bottom = w.bottom + self.size[1]
@@ -64,8 +71,11 @@ class Entity():
 						self._printinfo()
 						print()
 
+						if self.destroyOnWall: self.dead = True
+
 					# bottom colliding
 					if (newBR[1] < w.bottom and newBR[1] > w.y):
+
 						print("\nCollision: 2")
 						self._printinfo()
 						self.y = w.y - self.size[1]
@@ -75,12 +85,15 @@ class Entity():
 						self._printinfo()
 						print()
 
+						if self.destroyOnWall: self.dead = True
+
 				# if either corner is between wall's y corners
 				if ((newTL[1] > w.y and newTL[1] < w.bottom) or (newBR[1] > w.y and newBR[1] < w.bottom) and
-
+					# and old position is left or right of wall
 					(self.x > w.right or self.right < w.x)):
 					# entity left colliding
 					if (newTL[0] < w.right and newTL[0] > w.x):
+
 						print("\nCollision: 3")
 						self._printinfo()
 						self.x = w.right
@@ -90,8 +103,11 @@ class Entity():
 						self._printinfo()
 						print()
 
+						if self.destroyOnWall: self.dead = True
+
 					# entity right colliding
 					if (newBR[0] < w.right and newBR[0] > w.x):
+						
 						print("\nCollision: 4")
 						self._printinfo()
 						self.x = w.x - self.size[0]
@@ -101,6 +117,14 @@ class Entity():
 						self._printinfo()
 						print()
 
-		if not collision:
-			self.move()
+						if self.destroyOnWall: self.dead = True
+
+		self.move()
+
+	def isCollidingWith(self,entity):
+		if (((self.x > e.x and self.x < e.right) or (self.right > e.x and self.x < e.right)) and
+			((self.y > e.y and self.y < e.bottom) or (self.bottom > e.y and self.y < e.bottom))):
+			return True
+		else:
+			return False
 

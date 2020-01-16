@@ -1,5 +1,5 @@
 import asyncio
-import websockets
+import websocket
 from game import Game
 
 SOCKETS = set()
@@ -22,6 +22,8 @@ async def socketHandle(websocket,path):
 	while present:
 		try:
 			data = await recieve(websocket)
+			data = json.dumps(data)
+			game.updatePlayer(websocket.remote_address,data)
 			print(data)
 		except:
 			SOCKETS.remove(websocket)
