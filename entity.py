@@ -1,15 +1,16 @@
 
 class Entity():
-	def __init__(self,x,y,size,entType,
+	def __init__(self,x,y,size,entType,uid,
 				 gravity=True,
 				 velocity=[0,0],
 				 destroyOnImpact=False,
-				 mod=None):
+				 sprite=None):
 		self.x = x
 		self.y = y
 		self.right = size[0] + self.x
 		self.bottom = size[1] + self.y
 		self.size = size
+		self.uid = uid
 
 		# Types:
 		# player
@@ -23,7 +24,7 @@ class Entity():
 		self.dead = False
 		self.sounds = []
 		self.onGround = False
-		self.mod = mod
+		self.sprite = sprite
 
 	def _printinfo(self):
 		print({"type":self.type,

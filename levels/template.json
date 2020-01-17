@@ -1,24 +1,70 @@
 {
   "background": "image.jpg",
-  "size": [640,460],
+  "size": [640,480],
   "entities": [
     {
       "type": "platform",
+      "uid":"a",
       "x": 10,
-      "y": 100,
-      "size": [100,10]
+      "y": 10,
+      "size": [25,150],
+      "sprite":"stone"
     },
     {
       "type": "platform",
-      "x": 200,
-      "y": 90,
-      "size":[100,10]
+      "uid":"b",
+      "x": 10,
+      "y": 210,
+      "size": [25,150],
+      "sprite":"stone"
     },
     {
-      "type": "wall",
+      "type": "platform",
+      "uid":"c",
+      "x": 80,
+      "y": 210,
+      "size": [25,150],
+      "sprite":"stone"
+    },
+    {
+      "type": "platform",
+      "uid":"d",
+      "x": 180,
+      "y": 10,
+      "size": [25,150],
+      "sprite":"caution"
+    },
+    {
+      "type": "platform",
+      "uid":"e",
+      "x": 250,
+      "y": 10,
+      "size": [25,150],
+      "sprite":"caution"
+    },
+    {
+      "type": "platform",
+      "uid":"f",
+      "x": 180,
+      "y": 210,
+      "size": [25,150],
+      "sprite":"stone"
+    },
+    {
+      "type": "platform",
+      "uid":"g",
+      "x": 180,
+      "y": 335,
+      "size":[150,25],
+      "sprite":"grass"
+    },
+    {
+      "type": "platform",
+      "uid":"h",
       "x": 0,
-      "y": 460,
-      "size":[640,20]
+      "y":455,
+      "size":[640,25],
+      "sprite":"grass"
     }
   ]
 }

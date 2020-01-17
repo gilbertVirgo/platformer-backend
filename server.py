@@ -19,13 +19,17 @@ async def socketHandle(websocket,path): # DATA_DEBUG is GLOBAL because you can't
 	data = await recieve(websocket,DATA_DEBUG) 
 	data = json.loads(data)
 	data = data["data"]
-	print("Got id",data["id"])
+	print("[",data["id"],"]","Got id",data["id"])
 
 	socketID = data["id"] # LOCAL variable to keep socket id
 
-	print("Adding player:",data["id"])
-	GAME.addPlayer(data["id"])
-	print("Player added")
+	print("[",socketID,"]","Sending level")
+	await websocket.send(json.dumps({"type":"join","data":GAME.gameMap}))
+	print("[",socketID,"]","Sent level")
+
+	print("[",socketID,"]","Adding player:",socketID)
+	GAME.addPlayer(socketID)
+	print("[",socketID,"]","Player added\n")
 
 	present = True
 	while present:
@@ -33,16 +37,17 @@ async def socketHandle(websocket,path): # DATA_DEBUG is GLOBAL because you can't
 			data = await recieve(websocket,DATA_DEBUG)
 			data = json.loads(data)
 			data = data["data"]
-			GAME.updatePlayer(data["id"],data["profile"])
-			if DATA_DEBUG: print(data)
+			GAME.updatePlayer(socketID,data["profile"]) # Use socketID over data[id] in case they're trying to cheat
+			if DATA_DEBUG: print("[",socketID,"]",data)
 		except (ConnectionResetError, websockets.exceptions.ConnectionClosed):
 			present = False
 		except:
-			print("Error",sys.exc_info())
+			print("[",socketID,"]","Error",sys.exc_info())
 
 	SOCKETS.remove(websocket)
+	print(socketID)
 	GAME.removePlayer(socketID)
-	print("Player",socketID,"left")
+	print("[",socketID,"]","Player",socketID,"left")
 	websocket.close()
 
 @asyncio.coroutine
@@ -96,16 +101,16 @@ if __name__ == "__main__":
 	"".join(mapFileContents)
 	gameMap = json.loads("".join(mapFileContents))
 
-	try:
-		gameMap["size"]
-		gameMap["entities"]
-		GAME = Game(gameMap,debug=movementDebug)
-		print("Game object initiated")
-		continueGame = True
+	# try:
+	gameMap["size"]
+	gameMap["entities"]
+	GAME = Game(gameMap,debug=movementDebug)
+	print("Game object initiated")
+	continueGame = True
 
-	except KeyError:
-		continueGame = False
-		print("Invalid map")
+	# except KeyError:
+	# 	continueGame = False
+	# 	print("Invalid map")
 
 	asyncio.ensure_future(GameLoop(ticks,movementDebug))
 

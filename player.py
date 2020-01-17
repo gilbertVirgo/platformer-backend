@@ -1,9 +1,9 @@
 from entity import Entity
 
 class Player(Entity):
-	def __init__(self,ip,x=200,y=200):
+	def __init__(self,ip,uid,x=200,y=200):
 
-		Entity.__init__(self,x,y,(32,64),"player")
+		Entity.__init__(self,x,y,(32,64),"player",uid)
 		self.ip = ip
 
 		# LEFT RIGHT UP DOWN ATTACK INTERACT
@@ -24,10 +24,21 @@ class Player(Entity):
 		self.facing = "right"
 		self._movementModifier = 10
 		self._jumpModifier = 30
+		self.shot = False 		# just shot a bullet - TODO
+		self.sprite = "stillUnarmed"
 
 	def update(self,keys,debug=False,**kwargs):
 		if debug: print("player:",keys)
 		self.buttons = keys
+
+	def setMod(self):
+		if self.held["left"] != self.held["right"]:
+			if self.facing == "left":
+				self.sprite = "walkingLeftUnarmed"
+			if self.facing == "right":
+				self.sprite = "walkingRightUnarmed"
+		else:
+			self.sprite = "stillUnarmed"
 
 	def tick(self,walls,projectiles,debug=False,**kwargs):
 
@@ -91,8 +102,8 @@ class Player(Entity):
 
 		if self.buttons["attack"]:
 			if not self.held["attack"]:
-				pass
 				self.held["attack"] = True
+				self.shot = True
 		else:
 			self.held["attack"] = False
 
@@ -109,3 +120,5 @@ class Player(Entity):
 			self.held["right"] = False
 		if collisions["left"] and self.held["left"]:
 			self.held["left"] = False
+
+		self.setMod()

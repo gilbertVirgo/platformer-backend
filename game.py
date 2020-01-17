@@ -27,32 +27,41 @@ class Game():
 		self.gameMap = gameMap
 
 		self.debug = debug
+		self.uidCounter = 0
 		self.processLevel()
+
+	def makeUID(self):
+		self.uidCounter += 1
+		return self.uidCounter
 
 	def processLevel(self):
 		print("gameMap, size:",self.gameMap["size"])
+		print(self.gameMap)
 		size = self.gameMap["size"]
 
-		self.walls += [Wall(-50,-50,[50,size[1]+100]), 		# Left wall
-					   Wall(-50,-50,[size[0]+100,50]), 		# Top wall
-					   Wall(-50,size[1],[size[0]+100,50]), 	# Bottom wall
-					   Wall(size[0],-50,[50,size[1]+100])]	# Right wall
+		self.walls += [Wall(-50,-50,[50,size[1]+100],self.makeUID()),			 			# Left wall
+					   Wall(-50,-50,[size[0]+100,50],self.makeUID()),			 			# Top wall
+					   Wall(-50,size[1],[size[0]+100,50],self.makeUID()),			 		# Bottom wall
+					   Wall(size[0],-50,[50,size[1]+100],self.makeUID())]					# Right wall
 
 		for e in self.gameMap["entities"]:
 			if e["type"] == "platform":
 				self.walls += [Platform(e["x"],e["y"],
-										[int(e["size"][0]),int(e["size"][1])])]
-
+										[int(e["size"][0]),int(e["size"][1])],
+										self.makeUID(),
+										sprite=e["sprite"])]
 
 		for e in self.walls:
 			e._printinfo()
 
 
 	def addPlayer(self,ip):
-		self.players[ip] = Player(ip,200,200)
+		self.players[ip] = Player(ip,self.makeUID(),200,200)
 		self.entities += [self.players[ip]]
 
 	def removePlayer(self,ip):
+		print("deleting",ip)
+		self.entities.remove(self.players[ip])
 		del self.players[ip]
 
 	def isPlayer(self,ip):
@@ -71,6 +80,12 @@ class Game():
 				e.tick(self.walls,self.projectiles,debug=self.debug)
 			else:
 				del e
+			if e.type == "player":
+				if e.shot == True:
+					e.shot = False
+					if e.facing == "left":
+						pass
+
 
 
 	def returnRender(self):
@@ -88,21 +103,15 @@ class Game():
 		retSounds = []
 
 		for e in self.entities:
-			retEntities += [{"name":e.type,
+			retEntities += [{"type":e.type,
+							 "uid":e.uid,
 							 "x":e.x,
 							 "y":e.y,
 							 "bottom":e.bottom,
 							 "right":e.right,
 							 "size":e.size,
-							 "mod":e.mod}]
+							 "sprite":e.sprite}]
 			for x in e.sounds: retSounds += [x]
 			e.clearSounds()
-		for w in self.walls:
-			retEntities += [{"name":w.type,
-							 "x":w.x,
-							 "y":w.y,
-							 "bottom":w.bottom,
-							 "right":w.right,
-							 "mod":w.mod}]
-
+		# print (retEntities)
 		return json.dumps({"type":"render","data":{"entities":retEntities,"sounds":retSounds}})
