@@ -6,7 +6,7 @@ class Player(Entity):
 		Entity.__init__(self,x,y,(32,64),"player")
 		self.ip = ip
 
-		# LEFT RIGHT UP DOWN ATTACK PICKUP
+		# LEFT RIGHT UP DOWN ATTACK INTERACT
 		self.buttons = {"jump":False,
 						"left":False,
 						"down":False,
@@ -22,6 +22,8 @@ class Player(Entity):
 					 "interact":False}
 
 		self.facing = "right"
+		self._movementModifier = 10
+		self._jumpModifier = 30
 
 	def update(self,keys,debug=False,**kwargs):
 		if debug: print("player:",keys)
@@ -29,41 +31,56 @@ class Player(Entity):
 
 	def tick(self,walls,projectiles,debug=False,**kwargs):
 
-		if debug: self._printinfo()
+		# if debug: self._printinfo()
 		
 		for p in projectiles:
 			if self.isCollidingWith(p):
 				self.dead = True
 				p.dead = True
 
-		if self.buttons["jump"]:
-			if not self.held["jump"] and self.onGround:
-				if debug: print("jump down")
-				self.velocity[1] -= 10
-				self.held["jump"] = True
-				self.onGround = False
-		else:
-			self.held["jump"] = False
+		# For left and right:
+		# If pushed and was not previously pushed:
+		# 	Add movementModifier in appropriate direction
+		# 	Note as currently pushed
+		# 	Change facing direction
+		# If not pushed:
+		# 	if both directions are held:
+		#		take away movement modifier
 
 		if self.buttons["left"]:
 			if not self.held["left"]:
 				if debug: print("left down")
-				self.velocity[0] -= 1
+				self.velocity[0] -= self._movementModifier
 				self.held["left"] = True
 				self.facing = "left"
 		else:
+			if self.held["left"] and self.held["right"]:
+				self.velocity[0] += self._movementModifier
+			elif self.held["left"]:
+				self.velocity[0] = 0
 			self.held["left"] = False
-			self.velocity[0] += 1
 
 		if self.buttons["right"]:
 			if not self.held["right"]:
 				if debug: print("right down")
-				self.velocity[0] += 1
+				self.velocity[0] += self._movementModifier
 				self.held["right"] = True
 				self.facing = "right"
 		else:
+			if self.held["right"] and self.held["left"]:
+				self.velocity[0] -= self._movementModifier
+			elif self.held["right"]:
+				self.velocity[0] = 0
 			self.held["right"] = False
-			self.velocity[0] -= 1
+
+		if self.buttons["jump"]:
+			if not self.held["jump"] and self.onGround:
+				if debug: print("jump down")
+				self.velocity[1] -= self._jumpModifier
+				self.held["jump"] = True
+				self.onGround = False
+		else:
+			self.held["jump"] = False
 
 		if self.buttons["down"]:
 			if not self.held["down"]:
@@ -86,4 +103,9 @@ class Player(Entity):
 		else:
 			self.held["interact"] = False
 
-		Entity.tick(self,walls,debug=debug)
+		collisions = Entity.tick(self,walls,debug=debug)
+
+		if collisions["right"] and self.held["right"]:
+			self.held["right"] = False
+		if collisions["left"] and self.held["left"]:
+			self.held["left"] = False
