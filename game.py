@@ -24,18 +24,25 @@ class Game():
 		self.players = {}
 		self.walls = []
 		self.projectiles = []
+		self.gameMap = gameMap
 
 		self.debug = debug
-		self.processLevel(gameMap)
+		self.processLevel()
 
-	def processLevel(self,gameMap):
-		print("gameMap, size:",gameMap["size"])
-		size = gameMap["size"]
+	def processLevel(self):
+		print("gameMap, size:",self.gameMap["size"])
+		size = self.gameMap["size"]
 
 		self.walls += [Wall(-50,-50,[50,size[1]+100]), 		# Left wall
 					   Wall(-50,-50,[size[0]+100,50]), 		# Top wall
 					   Wall(-50,size[1],[size[0]+100,50]), 	# Bottom wall
 					   Wall(size[0],-50,[50,size[1]+100])]	# Right wall
+
+		for e in self.gameMap["entities"]:
+			if e["type"] == "platform":
+				self.walls += [Platform(e["x"],e["y"],
+										[int(e["size"][0]),int(e["size"][1])])]
+
 
 		for e in self.walls:
 			e._printinfo()
@@ -81,13 +88,21 @@ class Game():
 		retSounds = []
 
 		for e in self.entities:
-			retEntities += [{"type":e.type,
+			retEntities += [{"name":e.type,
 							 "x":e.x,
 							 "y":e.y,
 							 "bottom":e.bottom,
 							 "right":e.right,
-							 "size":e.size}]
+							 "size":e.size,
+							 "mod":e.mod}]
 			for x in e.sounds: retSounds += [x]
 			e.clearSounds()
+		for w in self.walls:
+			retEntities += [{"name":w.type,
+							 "x":w.x,
+							 "y":w.y,
+							 "bottom":w.bottom,
+							 "right":w.right,
+							 "mod":w.mod}]
 
 		return json.dumps({"type":"render","data":{"entities":retEntities,"sounds":retSounds}})
