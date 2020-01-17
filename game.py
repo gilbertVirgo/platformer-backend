@@ -1,14 +1,15 @@
 from player import Player
 from entity import Entity
 from projectiles import *
+from walls import *
 import json
 
 class Game():
-	def __init__(self,map,debug=False):
+	def __init__(self,gameMap,debug=False):
 		"""Game object that handles all entities
 
 		Args:
-			map (:obj:`list` of :obj:`dict`): List of entities represented by dictionaries
+			gameMap (dict): Dictionary of all relevant map information
 			debug (bool): Runs game in debug mode
 
 		Attributes:
@@ -21,11 +22,24 @@ class Game():
 		"""
 		self.entities = []
 		self.players = {}
-		self.walls = [Entity(0,480,(480,50),"wall",gravity=False),
-					  Entity(480,0,(50,480),"wall",gravity=False)]
+		self.walls = []
 		self.projectiles = []
 
 		self.debug = debug
+		self.processLevel(gameMap)
+
+	def processLevel(self,gameMap):
+		print("gameMap, size:",gameMap["size"])
+		size = gameMap["size"]
+
+		self.walls += [Wall(-50,-50,[50,size[1]+100]), 		# Left wall
+					   Wall(-50,-50,[size[0]+100,50]), 		# Top wall
+					   Wall(-50,size[1],[size[0]+100,50]), 	# Bottom wall
+					   Wall(size[0],-50,[50,size[1]+100])]	# Right wall
+
+		for e in self.walls:
+			e._printinfo()
+
 
 	def addPlayer(self,ip):
 		self.players[ip] = Player(ip,200,200)
@@ -42,7 +56,6 @@ class Game():
 
 	def updatePlayer(self,ip,data):
 		if self.isPlayer(ip):
-			print("game:",data)
 			self.players[ip].update(data,self.debug)
 
 	def tick(self):
@@ -72,7 +85,8 @@ class Game():
 							 "x":e.x,
 							 "y":e.y,
 							 "bottom":e.bottom,
-							 "right":e.right}]
+							 "right":e.right,
+							 "size":e.size}]
 			for x in e.sounds: retSounds += [x]
 			e.clearSounds()
 
