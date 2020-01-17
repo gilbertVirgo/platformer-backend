@@ -46,12 +46,21 @@ class Entity():
 		self.sounds = []
 
 	def tick(self,walls,debug=False,**kwargs):
+		"""
+		
+		Returns:
+			(dict): collisions 
+		"""
 		if debug: self._printinfo()
 
 		if self.gravity:
 			self.modVelocity(0,1)
 
 		collision = False
+		collisions = {"top":False,
+					  "right":False,
+					  "bottom":False,
+					  "left":False}
 
 		# collisions
 		if walls != None and self.type != "wall":
@@ -67,31 +76,32 @@ class Entity():
 
 					# entity top colliding
 					if (newTL[1] < w.bottom and newTL[1] > w.y):
+
 						if debug: print("\nCollision: 1")
 						if debug: self._printinfo()
+
 						self.y = w.bottom
 						self.bottom = w.bottom + self.size[1]
 						self.velocity[1] = 0
-						collision = True
+						collisions["top"] = True
+
 						if debug: self._printinfo()
 						if debug: print()
-
-						if self.destroyOnWall: self.dead = True
 
 					# entity bottom colliding
 					if (newBR[1] < w.bottom and newBR[1] > w.y):
 
 						if debug: print("\nCollision: 2")
 						if debug: self._printinfo()
+
 						self.y = w.y - self.size[1]
 						self.bottom = w.y
 						self.velocity[1] = 0
-						collision = True
 						self.onGround = True
+						collisions["bottom"] = True
 
 						if debug: self._printinfo()
 						if debug: print()
-						if self.destroyOnWall: self.dead = True
 
 				# if either corner is between wall's y corners
 				if ((newTL[1] > w.y and newTL[1] < w.bottom) or (newBR[1] > w.y and newBR[1] < w.bottom) and
@@ -103,30 +113,35 @@ class Entity():
 
 						if debug: print("\nCollision: 3")
 						if debug: self._printinfo()
+
 						self.x = w.right
 						self.right = w.right + self.size[0]
 						self.velocity[0] = 0
-						collision = True
+						collisions["left"] = True
+
 						if debug: self._printinfo()
 						if debug: print()
-
-						if self.destroyOnWall: self.dead = True
 
 					# entity right colliding
 					if (newBR[0] < w.right and newBR[0] > w.x):
 						
 						if debug: print("\nCollision: 4")
 						if debug: self._printinfo()
+
 						self.x = w.x - self.size[0]
 						self.right = w.x
 						self.velocity[0] = 0
-						collision = True
+						collisions["right"] = True
+
 						if debug: self._printinfo()
 						if debug: print()
 
-						if self.destroyOnWall: self.dead = True
+		if not all(value == False for value in collisions.values()):
+			if self.destroyOnWall: 
+				self.dead = True
 
 		self.move()
+		return collisions
 
 	def isCollidingWith(self,entity):
 		if (((self.x > e.x and self.x < e.right) or (self.right > e.x and self.x < e.right)) and
