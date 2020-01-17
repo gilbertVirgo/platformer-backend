@@ -4,59 +4,71 @@ import json
 import sys
 from game import Game
 
-dataDebug = False
+DATA_DEBUG = False
+SOCKETS = set()
 
 async def recieve(websocket,debug):
 	data = await websocket.recv()
 	if debug: print("DATA RECIEVED:",data,"FROM:",websocket.remote_address)
 	return data
 
-async def socketHandle(websocket,path):
+async def socketHandle(websocket,path): # DATA_DEBUG is GLOBAL because you can't pass parameters to socketHandle
 	print("socketHandle entered:",websocket.remote_address)
 	SOCKETS.add(websocket)
 	print("Awaiting id")
-	data = await recieve(websocket,dataDebug)
+	data = await recieve(websocket,DATA_DEBUG) 
 	data = json.loads(data)
 	data = data["data"]
 	print("Got id",data["id"])
 
+	socketID = data["id"] # LOCAL variable to keep socket id
+
 	print("Adding player:",data["id"])
-	game.addPlayer(data["id"])
+	GAME.addPlayer(data["id"])
 	print("Player added")
 
 	present = True
 	while present:
 		try:
-			data = await recieve(websocket,dataDebug)
+			data = await recieve(websocket,DATA_DEBUG)
 			data = json.loads(data)
 			data = data["data"]
-			game.updatePlayer(data["id"],data["profile"])
-			if dataDebug: print(data)
-		except ConnectionResetError:
-			SOCKETS.remove(websocket)
+			GAME.updatePlayer(data["id"],data["profile"])
+			if DATA_DEBUG: print(data)
+		except (ConnectionResetError, websockets.exceptions.ConnectionClosed):
 			present = False
-			game.removePlayer(websocket.remote_address)
-			websocket.close()
 		except:
 			print("Error",sys.exc_info())
 
+	SOCKETS.remove(websocket)
+	GAME.removePlayer(socketID)
+	print("Player",socketID,"left")
+	websocket.close()
+
 @asyncio.coroutine
-async def GameLoop(ticks):
+async def GameLoop(ticks,movementDebug):
+	continueGame = True
 
 	print("Loop entering")
-	while True:
-		ret = game.returnRender()
+
+	while continueGame:
+		ret = GAME.returnRender()
 		for websocket in SOCKETS:
 			try:
 				await websocket.send(ret)
+			except KeyboardInterrupt:
+				continueGame = False
 			except:
 				# connection is probably closed, do nothing as that's handled in socketHandle
 				pass
 
-		game.tick()
+		GAME.tick()
 
 		if ticks: print("tick")
 		await asyncio.sleep(1/30)
+
+	print("Exiting")
+	sys.exit()
 
 if __name__ == "__main__":
 
@@ -74,15 +86,28 @@ if __name__ == "__main__":
 
 	if "-r" in sys.argv:
 		print("Data recieved debug mode on")
-		dataDebug = True
+		DATA_DEBUG = True
 	else:
-		dataDebug = False
+		DATA_DEBUG = False
 
-	SOCKETS = set()
-	game = Game(None,debug=movementDebug)
-	print("Game object initiated")
+	mapFile = open("levels/template.json")
+	mapFileContents = mapFile.readlines()
+	mapFile.close()
+	"".join(mapFileContents)
+	gameMap = json.loads("".join(mapFileContents))
 
-	asyncio.ensure_future(GameLoop(ticks))
+	try:
+		gameMap["size"]
+		gameMap["entities"]
+		GAME = Game(gameMap,debug=movementDebug)
+		print("Game object initiated")
+		continueGame = True
+
+	except KeyError:
+		continueGame = False
+		print("Invalid map")
+
+	asyncio.ensure_future(GameLoop(ticks,movementDebug))
 
 	start_server = websockets.serve(socketHandle,"0.0.0.0",1234)
 	asyncio.get_event_loop().run_until_complete(start_server)
