@@ -1,0 +1,26 @@
+{
+	"background": "image.jpg",
+	"size": [640, 460],
+	"entities": [
+		{
+			"type": "platform",
+			"mod": "stone",
+			"x": 10,
+			"y": 100,
+			"size": [100, 10]
+		},
+		{
+			"type": "platform",
+			"mod": "grass",
+			"x": 0,
+			"y": 90,
+			"size": [100, 10]
+		},
+		{
+			"type": "wall",
+			"x": 0,
+			"y": 460,
+			"size": [640, 20]
+		}
+	]
+}

@@ -3,7 +3,7 @@ from entity import Entity
 class Player(Entity):
 	def __init__(self,ip,uid,x=200,y=200):
 
-		Entity.__init__(self,x,y,(32,64),"player",uid)
+		Entity.__init__(self,x,y,(40,60),"player",uid)
 		self.ip = ip
 
 		# LEFT RIGHT UP DOWN ATTACK INTERACT
